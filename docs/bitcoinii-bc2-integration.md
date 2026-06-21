@@ -12,6 +12,10 @@ BasicSwap's published coin integration guidance says each coin is case-by-case, 
 - Watch-only address support.
 - Comparison against similar existing BasicSwap coin integrations.
 
+Source: Particl Academy, "Integrate a Coin", `https://academy.particl.io/en/latest/basicswap-guides/basicswapguides_apply.html`.
+
+The Academy page notes this requirement list was current for BasicSwap v0.13.4. This branch is based on BasicSwap v0.16.5, so the checklist is treated as the official baseline while the implementation is verified against the current repository patterns.
+
 BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the existing BTC-like integration pattern used by coins such as Dogecoin and Namecoin: add chain parameters, add a small `BTCInterface` subclass, wire interface creation and wallet seed checks, add prepare/download/config support, and then validate with daemon and swap tests.
 
 ## Added
