@@ -59,6 +59,9 @@ PARTICL_LINUX_EXTRA = os.getenv("PARTICL_LINUX_EXTRA", "nousb")
 BITCOIN_VERSION = os.getenv("BITCOIN_VERSION", "29.3")
 BITCOIN_VERSION_TAG = os.getenv("BITCOIN_VERSION_TAG", "")
 
+BITCOINII_VERSION = os.getenv("BITCOINII_VERSION", "29.1.0")
+BITCOINII_VERSION_TAG = os.getenv("BITCOINII_VERSION_TAG", "")
+
 LITECOIN_VERSION = os.getenv("LITECOIN_VERSION", "0.21.5.5")
 LITECOIN_VERSION_TAG = os.getenv("LITECOIN_VERSION_TAG", "")
 
@@ -102,6 +105,7 @@ DOGECOIN_VERSION_TAG = os.getenv("DOGECOIN_VERSION_TAG", "")
 known_coins = {
     "particl": (PARTICL_VERSION, PARTICL_VERSION_TAG, ("tecnovert",)),
     "bitcoin": (BITCOIN_VERSION, BITCOIN_VERSION_TAG, ("laanwj",)),
+    "bitcoinii": (BITCOINII_VERSION, BITCOINII_VERSION_TAG, ("BitcoinII_Dev",)),
     "litecoin": (LITECOIN_VERSION, LITECOIN_VERSION_TAG, ("davidburkett38",)),
     "decred": (DCR_VERSION, DCR_VERSION_TAG, ("decred_release",)),
     "namecoin": (NMC_VERSION, NMC_VERSION_TAG, ("RoseTuring",)),
@@ -219,6 +223,13 @@ BTC_PORT = int(os.getenv("BTC_PORT", 8333))
 BTC_ONION_PORT = int(os.getenv("BTC_ONION_PORT", 8334))
 BTC_RPC_USER = os.getenv("BTC_RPC_USER", "")
 BTC_RPC_PWD = os.getenv("BTC_RPC_PWD", "")
+
+BC2_RPC_HOST = os.getenv("BC2_RPC_HOST", "127.0.0.1")
+BC2_RPC_PORT = int(os.getenv("BC2_RPC_PORT", 8337))
+BC2_PORT = int(os.getenv("BC2_PORT", 8338))
+BC2_ONION_PORT = int(os.getenv("BC2_ONION_PORT", 8339))
+BC2_RPC_USER = os.getenv("BC2_RPC_USER", "")
+BC2_RPC_PWD = os.getenv("BC2_RPC_PWD", "")
 
 LTC_RPC_HOST = os.getenv("LTC_RPC_HOST", "127.0.0.1")
 LTC_RPC_PORT = int(os.getenv("LTC_RPC_PORT", 19895))
@@ -403,7 +414,7 @@ def getWalletName(coin_params: str, default_name: str, prefix_override=None) -> 
 
 def getDescriptorWalletOption(coin_params):
     ticker: str = coin_params["ticker"]
-    default_option: bool = True if ticker in ("NMC",) else False
+    default_option: bool = True if ticker in ("BC2", "NMC") else False
     return toBool(os.getenv(ticker + "_USE_DESCRIPTORS", default_option))
 
 
@@ -668,6 +679,43 @@ def extractCore(coin, version_data, settings, bin_dir, release_path, extra_opts=
     logger.info(f"Extracting core {coin} v{version}{version_tag}")
     extract_core_overwrite = extra_opts.get("extract_core_overwrite", True)
 
+    if coin == "bitcoinii":
+        bins = ["bitcoinIId", "bitcoinII-cli", "bitcoinII-tx", "bitcoinII-wallet"]
+        if "win" in BIN_ARCH:
+            with zipfile.ZipFile(release_path) as fz:
+                namelist = fz.namelist()
+                for b in bins:
+                    b += ".exe"
+                    out_path = os.path.join(bin_dir, b)
+                    if os.path.exists(out_path) and not extract_core_overwrite:
+                        continue
+                    for entry in namelist:
+                        if entry.endswith(b):
+                            with open(out_path, "wb") as fout:
+                                fout.write(fz.read(entry))
+                            break
+            return
+
+        with tarfile.open(release_path) as ft:
+            members = ft.getmembers()
+            for b in bins:
+                out_path = os.path.join(bin_dir, b)
+                if os.path.exists(out_path) and not extract_core_overwrite:
+                    continue
+                for member in members:
+                    if member.isdir() or not member.name.endswith(b):
+                        continue
+                    with open(out_path, "wb") as fout, ft.extractfile(member) as fi:
+                        fout.write(fi.read())
+                    try:
+                        os.chmod(out_path, stat.S_IRWXU | stat.S_IXGRP | stat.S_IXOTH)
+                    except Exception as e:
+                        logging.warning(
+                            f"Unable to set file permissions: {e}, for {out_path}"
+                        )
+                    break
+        return
+
     if coin in ("monero", "firo", "wownero"):
         if coin in ("monero", "wownero"):
             bins = [coin + "d", coin + "-wallet-rpc"]
@@ -793,6 +841,48 @@ def prepareCore(coin, version_data, settings, data_dir, extra_opts={}):
     bin_dir = os.path.expanduser(settings["chainclients"][coin]["bindir"])
     if not os.path.exists(bin_dir):
         os.makedirs(bin_dir)
+
+    if coin == "bitcoinii":
+        if "win" in BIN_ARCH:
+            arch_name = "x86_64-win64-CLI"
+            file_ext = "zip"
+        elif USE_PLATFORM == "Darwin":
+            machine = platform.machine().lower()
+            arch_name = (
+                "arm64-apple-darwin"
+                if machine in ("arm64", "aarch64")
+                else "x86_64-apple-darwin"
+            )
+            file_ext = "zip"
+        else:
+            if BIN_ARCH.startswith("x86_64"):
+                arch_name = "x86_64-linux-CLI"
+            elif BIN_ARCH.startswith("aarch64"):
+                arch_name = "aarch64-linux-CLI"
+            elif BIN_ARCH.startswith("arm-linux-gnueabihf"):
+                arch_name = "arm-linux-gnueabihf-CLI"
+            else:
+                raise ValueError(
+                    f"Unsupported BitcoinII binary architecture {BIN_ARCH}"
+                )
+            file_ext = "tar.gz"
+
+        release_filename = "BitcoinII-{}-{}.{}".format(
+            version + version_tag, arch_name, file_ext
+        )
+        release_url = (
+            "https://github.com/Bitcoin-II/BitcoinII-Core/releases/download"
+            "/v{}/{}".format(version + version_tag, release_filename)
+        )
+        release_path = os.path.join(bin_dir, release_filename)
+        downloadRelease(release_url, release_path, extra_opts)
+        release_hash = getFileHash(release_path)
+        logger.warning(
+            "BitcoinII release hash: {}. No signed checksum source is configured "
+            "for automatic verification.".format(release_hash)
+        )
+        extractCore(coin, version_data, settings, bin_dir, release_path, extra_opts)
+        return
 
     filename_extra = ""
     if "osx" in BIN_ARCH:
@@ -1356,10 +1446,14 @@ def prepareDataDir(coin, settings, chain, particl_mnemonic, extra_opts={}):
             if coin in ("navcoin",):
                 chainname = "devnet" if chain == "regtest" else chain
                 fp.write(chainname + "=1\n")
+            elif coin == "bitcoinii" and chain == "testnet":
+                fp.write("testnet4=1\n")
             else:
                 fp.write(chain + "=1\n")
             if coin not in ("firo", "navcoin"):
-                if chain == "testnet":
+                if coin == "bitcoinii" and chain == "testnet":
+                    fp.write("[testnet4]\n\n")
+                elif chain == "testnet":
                     fp.write("[test]\n\n")
                 elif chain == "regtest":
                     fp.write("[regtest]\n\n")
@@ -1440,6 +1534,16 @@ def prepareDataDir(coin, settings, chain, particl_mnemonic, extra_opts={}):
                 fp.write(
                     "rpcauth={}:{}${}\n".format(
                         BTC_RPC_USER, salt, password_to_hmac(salt, BTC_RPC_PWD)
+                    )
+                )
+        elif coin == "bitcoinii":
+            fp.write("prune=2000\n")
+            fp.write("changetype=bech32\n")
+            fp.write("fallbackfee=0.0002\n")
+            if BC2_RPC_USER != "":
+                fp.write(
+                    "rpcauth={}:{}${}\n".format(
+                        BC2_RPC_USER, salt, password_to_hmac(salt, BC2_RPC_PWD)
                     )
                 )
         elif coin == "bitcoincash":
@@ -1872,6 +1976,7 @@ def initialise_wallets(
         coins_to_create_wallets_for = (
             Coins.PART,
             Coins.BTC,
+            Coins.BC2,
             Coins.LTC,
             Coins.DOGE,
             Coins.DCR,
@@ -2014,7 +2119,13 @@ def initialise_wallets(
                                 use_descriptors,
                             ],
                         )
-                    elif c in (Coins.BTC, Coins.LTC, Coins.NMC, Coins.DOGE):
+                    elif c in (
+                        Coins.BTC,
+                        Coins.BC2,
+                        Coins.LTC,
+                        Coins.NMC,
+                        Coins.DOGE,
+                    ):
                         # wallet_name, disable_private_keys, blank, passphrase, avoid_reuse, descriptors
                         swap_client.callcoinrpc(
                             c,
@@ -2690,6 +2801,24 @@ def main():
             "core_version_no": getKnownVersion("bitcoin"),
             "core_version_group": 28,
         },
+        "bitcoinii": {
+            "connection_type": "rpc",
+            "manage_daemon": shouldManageDaemon("BC2"),
+            "rpchost": BC2_RPC_HOST,
+            "rpcport": BC2_RPC_PORT + port_offset,
+            "onionport": BC2_ONION_PORT + port_offset,
+            "datadir": os.getenv("BC2_DATA_DIR", os.path.join(data_dir, "bitcoinii")),
+            "bindir": os.path.join(bin_dir, "bitcoinii"),
+            "port": BC2_PORT + port_offset,
+            "config_filename": "bitcoinii.conf",
+            "core_binname": "bitcoinIId",
+            "cli_binname": "bitcoinII-cli",
+            "use_segwit": True,
+            "blocks_confirmed": 1,
+            "conf_target": 2,
+            "core_version_no": getKnownVersion("bitcoinii"),
+            "core_version_group": 29,
+        },
         "litecoin": {
             "connection_type": "rpc",
             "manage_daemon": shouldManageDaemon("LTC"),
@@ -2939,7 +3068,7 @@ def main():
 
         ticker: str = coin_params["ticker"]
         if getDescriptorWalletOption(coin_params):
-            if coin_id not in (Coins.BTC, Coins.NMC):
+            if coin_id not in (Coins.BTC, Coins.BC2, Coins.NMC):
                 raise ValueError(f"Descriptor wallet unavailable for {coin_name}")
 
             coin_settings["use_descriptors"] = True
@@ -2961,6 +3090,9 @@ def main():
     if BTC_RPC_USER != "":
         chainclients["bitcoin"]["rpcuser"] = BTC_RPC_USER
         chainclients["bitcoin"]["rpcpassword"] = BTC_RPC_PWD
+    if BC2_RPC_USER != "":
+        chainclients["bitcoinii"]["rpcuser"] = BC2_RPC_USER
+        chainclients["bitcoinii"]["rpcpassword"] = BC2_RPC_PWD
     if BCH_RPC_USER != "":
         chainclients["bitcoincash"]["rpcuser"] = BCH_RPC_USER
         chainclients["bitcoincash"]["rpcpassword"] = BCH_RPC_PWD
