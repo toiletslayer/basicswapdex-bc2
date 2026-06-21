@@ -1,5 +1,7 @@
 # BasicSwap DEX (BSX)
 
+> BitcoinII / BC2 integration branch: see [docs/bitcoinii-bc2-integration.md](docs/bitcoinii-bc2-integration.md) for implementation status and [docs/bitcoinii-bc2-next-steps.md](docs/bitcoinii-bc2-next-steps.md) for the remaining roadmap.
+
 ![BasicswapDEX Preview](.github-readme/basicswap_header.jpg)
 
 **[Official Website](https://basicswapdex.com)** | **[News](https://particl.news)** | **[Tutorials](https://academy.particl.io)** | **[Chat]( https://matrix.to/#/#basicswap:matrix.org )**
