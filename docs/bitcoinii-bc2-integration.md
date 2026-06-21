@@ -48,6 +48,11 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
 - `basicswap-prepare` dry-runs for regtest and testnet with `--nocores`.
 - BitcoinII v29.1.0 Windows CLI archive download and extraction.
 - `bitcoinIId` regtest RPC smoke test.
+- Watch-only descriptor import against a private-key-disabled `bitcoinIId` regtest wallet.
+- Manual requirement probe against `bitcoinIId` v29.1.0:
+  - descriptor RPCs `getdescriptorinfo` and `importdescriptors` are available.
+  - `getdeploymentinfo` lists `csv`, `segwit`, and `taproot`.
+  - the daemon reports `/Satoshi:29.1.0/`.
 
 ## Roadmap
 
@@ -58,12 +63,20 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
 - Added `basicswap-prepare` support for BitcoinII v29.1.0 binaries and config generation.
 - Added runtime wiring for daemon arguments, wallet creation, descriptor wallets, and seed checks.
 - Verified `bitcoinii` naming and avoided `BTC2` naming.
+- Verified BitcoinII descriptor import into a private-key-disabled watch wallet:
+  - `createwallet watch disable_private_keys=true blank=true descriptors=true`
+  - `importdescriptors` returned success.
+  - `getaddressinfo` on the imported address returned solvable descriptor data.
+- Ran a manual equivalent of the old requirements script as far as the current repo/release allows:
+  - UTXO/script behavior follows the Bitcoin Core-derived code path and BTC-like interface.
+  - CSV and Segwit are present in `getdeploymentinfo`.
+  - descriptor watch-only wallet RPCs are available and import succeeds.
 
 ### Next Verification
 
-- Explicitly test watch-only descriptor import/use against `bitcoinIId` regtest. The current code creates a descriptor watch wallet, but the watch-only requirement should be demonstrated directly.
-- Run the equivalent of the old BasicSwap requirements script manually because the current BasicSwap repo no longer includes `scripts/requirements.python`.
-- Run a full managed BasicSwap startup with Particl plus BC2.
+- Resolve BC2 regtest mining behavior before full swap tests. The v29.1.0 release binary mined the first regtest block with `generatetoaddress`, then returned an empty block list on later calls even with `maxtries=100000000`. The legacy `setgenerate` RPC is not available. That prevents quickly maturing coinbase funds for automated regtest swap tests.
+- After mining is predictable, test funded watch-only balance tracking against `bitcoinIId` regtest. Descriptor import is verified, but a funded balance test needs spendable regtest coins.
+- Run a full managed BasicSwap startup with Particl plus BC2. This requires Particl binaries in the test environment.
 - Run a live regtest swap path using BC2 as the BTC-like side.
 
 ### Packaging And Upstream Readiness
