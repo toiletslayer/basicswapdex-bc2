@@ -71,10 +71,11 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
   - UTXO/script behavior follows the Bitcoin Core-derived code path and BTC-like interface.
   - CSV and Segwit are present in `getdeploymentinfo`.
   - descriptor watch-only wallet RPCs are available and import succeeds.
+- Prepared an initial BitcoinII Core regtest mining patch at `patches/bitcoinii-core-regtest-mining-fix.patch`.
 
 ### Next Verification
 
-- Resolve BC2 regtest mining behavior before full swap tests. The v29.1.0 release binary mined the first regtest block with `generatetoaddress`, then returned an empty block list on later calls even with `maxtries=100000000`. The legacy `setgenerate` RPC is not available. Source review shows regtest is intended to be easy (`powLimit=7fff...`, `fPowAllowMinDifficultyBlocks=true`, `fPowNoRetargeting=true`), but the regtest genesis is created with `nBits=0x1d00ffff`. With no retargeting, that hard target appears to carry forward and prevents practical local mining. This likely needs a BitcoinII Core regtest fix or a dedicated testing binary before automated BasicSwap swap tests can run. Use `scripts/probe_bitcoinii_regtest.py` to retest future binaries.
+- Build and test the BitcoinII Core regtest mining patch. The v29.1.0 release binary mined the first regtest block with `generatetoaddress`, then returned an empty block list on later calls even with `maxtries=100000000`. The legacy `setgenerate` RPC is not available. Source review shows regtest is intended to be easy (`powLimit=7fff...`, `fPowAllowMinDifficultyBlocks=true`, `fPowNoRetargeting=true`), but the regtest genesis is created with `nBits=0x1d00ffff`. With no retargeting, that hard target appears to carry forward and prevents practical local mining. Use `scripts/probe_bitcoinii_regtest.py` to test patched binaries.
 - After mining is predictable, test funded watch-only balance tracking against `bitcoinIId` regtest. Descriptor import is verified, but a funded balance test needs spendable regtest coins.
 - Run a full managed BasicSwap startup with Particl plus BC2. This requires Particl binaries in the test environment.
 - Run a live regtest swap path using BC2 as the BTC-like side.

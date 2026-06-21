@@ -61,4 +61,24 @@ Because retargeting is disabled, the hard `0x1d00ffff` target appears to carry f
 
 BitcoinII Core probably needs a regtest-specific genesis setup with an easy `nBits` value, similar to Bitcoin Core-style regtest behavior, and updated expected regtest genesis hash assertions.
 
+An initial source patch is included at:
+
+```text
+patches/bitcoinii-core-regtest-mining-fix.patch
+```
+
+That patch changes only regtest chain parameters:
+
+- regtest genesis `nBits` from `0x1d00ffff` to `0x207fffff`.
+- regtest genesis hash assertion to the resulting hash.
+- regtest height-0 checkpoint to the resulting hash.
+
+The patch has not yet been compiled in this environment because CMake/Ninja/MSVC build tools are not installed on the current PC. After building a patched `bitcoinIId`, rerun:
+
+```bash
+python scripts/probe_bitcoinii_regtest.py --daemon /path/to/patched/bitcoinIId --cli /path/to/patched/bitcoinII-cli
+```
+
+The expected patched result is `repeat_mining_ok: true`.
+
 Until that is fixed or a dedicated testing binary is provided, BasicSwap can start and configure BC2, but full automated regtest swap tests cannot be completed reliably.
