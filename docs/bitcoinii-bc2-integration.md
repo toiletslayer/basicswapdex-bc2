@@ -62,7 +62,7 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
 - Added BC2 chain parameters and interface code.
 - Added `basicswap-prepare` support for BitcoinII v29.1.0 binaries and config generation.
 - Added runtime wiring for daemon arguments, wallet creation, descriptor wallets, and seed checks.
-- Verified `bitcoinii` naming and avoided `BTC2` naming.
+- Verified project naming uses `bitcoinii`, `BitcoinII`, and `BC2` consistently.
 - Verified BitcoinII descriptor import into a private-key-disabled watch wallet:
   - `createwallet watch disable_private_keys=true blank=true descriptors=true`
   - `importdescriptors` returned success.
