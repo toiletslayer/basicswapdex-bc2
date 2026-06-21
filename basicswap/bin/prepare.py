@@ -680,20 +680,32 @@ def extractCore(coin, version_data, settings, bin_dir, release_path, extra_opts=
     extract_core_overwrite = extra_opts.get("extract_core_overwrite", True)
 
     if coin == "bitcoinii":
-        bins = ["bitcoinIId", "bitcoinII-cli", "bitcoinII-tx", "bitcoinII-wallet"]
+        required_bins = ["bitcoinIId", "bitcoinII-cli"]
+        optional_bins = ["bitcoinII-tx", "bitcoinII-wallet"]
+        bins = required_bins + optional_bins
+        extracted_bins = set()
         if "win" in BIN_ARCH:
             with zipfile.ZipFile(release_path) as fz:
                 namelist = fz.namelist()
                 for b in bins:
-                    b += ".exe"
-                    out_path = os.path.join(bin_dir, b)
+                    bin_name = b + ".exe"
+                    out_path = os.path.join(bin_dir, bin_name)
                     if os.path.exists(out_path) and not extract_core_overwrite:
+                        extracted_bins.add(b)
                         continue
                     for entry in namelist:
-                        if entry.endswith(b):
+                        if entry.endswith(bin_name):
                             with open(out_path, "wb") as fout:
                                 fout.write(fz.read(entry))
+                            extracted_bins.add(b)
                             break
+            missing_bins = [b for b in required_bins if b not in extracted_bins]
+            if missing_bins:
+                raise ValueError(
+                    "Missing required BitcoinII binaries: {}".format(
+                        ", ".join(missing_bins)
+                    )
+                )
             return
 
         with tarfile.open(release_path) as ft:
@@ -701,12 +713,14 @@ def extractCore(coin, version_data, settings, bin_dir, release_path, extra_opts=
             for b in bins:
                 out_path = os.path.join(bin_dir, b)
                 if os.path.exists(out_path) and not extract_core_overwrite:
+                    extracted_bins.add(b)
                     continue
                 for member in members:
                     if member.isdir() or not member.name.endswith(b):
                         continue
                     with open(out_path, "wb") as fout, ft.extractfile(member) as fi:
                         fout.write(fi.read())
+                    extracted_bins.add(b)
                     try:
                         os.chmod(out_path, stat.S_IRWXU | stat.S_IXGRP | stat.S_IXOTH)
                     except Exception as e:
@@ -714,6 +728,13 @@ def extractCore(coin, version_data, settings, bin_dir, release_path, extra_opts=
                             f"Unable to set file permissions: {e}, for {out_path}"
                         )
                     break
+        missing_bins = [b for b in required_bins if b not in extracted_bins]
+        if missing_bins:
+            raise ValueError(
+                "Missing required BitcoinII binaries: {}".format(
+                    ", ".join(missing_bins)
+                )
+            )
         return
 
     if coin in ("monero", "firo", "wownero"):
