@@ -28,6 +28,7 @@ from basicswap.basicswap import (
     BasicSwap,
     SwapTypes,
 )
+from basicswap.chainparams import chainparams, getCoinIdFromName
 from basicswap.contrib.mnemonic import Mnemonic
 from basicswap.db import create_db_, DBMethods, KnownIdentity
 from basicswap.util import h2b
@@ -39,6 +40,7 @@ from basicswap.util.network import is_private_ip_address
 from basicswap.util.rfc2440 import rfc2440_hash_password
 from basicswap.util_xmr import encode_address as xmr_encode_address
 from basicswap.interface.btc import BTCInterface
+from basicswap.interface.bitcoinii import BitcoinIIInterface
 from basicswap.interface.xmr import XMRInterface
 from tests.basicswap.mnemonics import mnemonics
 from tests.basicswap.util import REQUIRED_SETTINGS
@@ -86,6 +88,20 @@ class Test(unittest.TestCase):
         xmr_coin_settings = {"rpcport": 0, "walletrpcport": 0, "walletrpcauth": "none"}
         xmr_coin_settings.update(REQUIRED_SETTINGS)
         return XMRInterface(xmr_coin_settings, "regtest")
+
+    def test_bitcoinii_chainparams(self):
+        assert getCoinIdFromName("bitcoinii") == Coins.BC2
+        assert BitcoinIIInterface.coin_type() == Coins.BC2
+
+        bc2_params = chainparams[Coins.BC2]
+        assert bc2_params["name"] == "bitcoinii"
+        assert bc2_params["ticker"] == "BC2"
+        assert bc2_params["display_name"] == "BitcoinII"
+        assert bc2_params["message_magic"] == "BitcoinII Signed Message:\n"
+        assert bc2_params["mainnet"]["rpcport"] == 8337
+        assert bc2_params["testnet"]["rpcport"] == 48337
+        assert bc2_params["testnet"]["name"] == "testnet4"
+        assert bc2_params["regtest"]["rpcport"] == 18447
 
     def test_serialise_num(self):
         def test_case(v, nb=None):
