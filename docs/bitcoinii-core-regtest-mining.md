@@ -13,6 +13,23 @@ Tested against BitcoinII Core v29.1.0 Windows CLI release:
 
 This prevents maturing coinbase funds and blocks automated BasicSwap regtest swap validation.
 
+## Reproduction Probe
+
+This branch includes a standalone probe script:
+
+```bash
+python scripts/probe_bitcoinii_regtest.py --daemon /path/to/bitcoinIId --cli /path/to/bitcoinII-cli
+```
+
+The script checks:
+
+- descriptor RPC availability.
+- CSV, Segwit, and Taproot deployment visibility.
+- descriptor import into a private-key-disabled watch wallet.
+- three consecutive `generatetoaddress` attempts.
+
+Expected result with the v29.1.0 release binary: descriptor/watch checks pass, the first mining attempt returns one block, later mining attempts return no blocks, and the script exits nonzero.
+
 ## Requirement Impact
 
 The BasicSwap integration requirements are otherwise lining up:
