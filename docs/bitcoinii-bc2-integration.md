@@ -26,6 +26,7 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
 - `basicswap-prepare` support for `--withcoins=bitcoinii`.
 - BitcoinII v29.1.0 release download and extraction support.
 - Test coverage for BC2 chain parameter lookup and interface coin type.
+- Extended BC2 regtest harness patterned after the existing BTC-like Namecoin tests.
 
 ## BitcoinII Details Used
 
@@ -65,6 +66,7 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
   - started full `basicswap-run` and confirmed the UI returned HTTP 200.
   - confirmed BasicSwap detected `BitcoinII Core version 290100`.
   - confirmed the BC2 wallet seed check passed without the "not derived from swap seed" warning.
+- Syntax validation for `tests/basicswap/extended/test_bitcoinii.py`.
 
 ## Roadmap
 
@@ -87,16 +89,23 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
 - Built the patched BitcoinII Core daemon/CLI locally and verified repeat regtest mining works.
 - Verified funded watch-only balance tracking against the patched regtest daemon.
 - Verified managed Particl plus BC2 regtest startup through BasicSwap's runner.
+- Added `tests/basicswap/extended/test_bitcoinii.py`, an extended daemon-backed harness for:
+  - descriptor spend/watch wallet creation.
+  - BC2 wallet initialization from BasicSwap seed material.
+  - repeat regtest mining with patched BitcoinII Core.
+  - inherited BTC-like script checks for Segwit, CLTV, CSV, watch-only behavior, and related wallet RPCs.
+  - seller-first PART/BC2 swap success and refund/error-path coverage through the existing shared BTC-like test helpers.
 
 ### Next Verification
 
-- Run a live regtest swap path using BC2 as the BTC-like side.
+- Run `tests/basicswap/extended/test_bitcoinii.py` end-to-end with patched BitcoinII Core binaries and the standard BasicSwap extended-test daemon set available.
+- If the full inherited extended suite is too slow for upstream CI, split out a smaller BC2 smoke test that runs only PART/BC2 seller-first success plus the watch-only/script requirement checks.
 
 ### Packaging And Upstream Readiness
 
 - Find or request a signed checksum source for BitcoinII releases. Current prepare support logs the release SHA256 but cannot fully verify it against a signed upstream checksum file.
 - Check whether upstream BasicSwap wants BC2 release downloads from `Bitcoin-II/BitcoinII-Core` or a separate binary-release repository.
-- Add/update extended regtest tests if upstream maintainers want BC2 covered like Namecoin/Dogecoin.
+- Confirm whether upstream BasicSwap wants BC2 covered like Namecoin/Dogecoin in the extended test suite, or whether they prefer a smaller opt-in BC2 smoke test.
 - Decide whether upstream BasicSwap wants BitcoinII as a built-in coin or maintained as a downstream fork.
 
 ### Local Test Notes
