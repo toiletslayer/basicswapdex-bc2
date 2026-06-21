@@ -1228,6 +1228,7 @@ class BasicSwap(BaseApp, BSXNetwork, UIApp):
                 "dash",
                 "firo",
                 "bitcoincash",
+                "bitcoinii",
             ):
                 pidfilename += "d"
 
@@ -3204,6 +3205,18 @@ class BasicSwap(BaseApp, BSXNetwork, UIApp):
         ci = self.ci(coin_type)
         db_key_coin_name = ci.coin_name().lower()
         seed_id = ci.getSeedHash(root_key)
+
+        if coin_type in (Coins.LTC, Coins.BTC, Coins.BC2) and getattr(
+            ci, "_use_descriptors", False
+        ):
+            from basicswap.contrib.test_framework.script import hash160
+            from basicswap.util.extkey import ExtKeyPair
+
+            ek = ExtKeyPair()
+            ek.set_seed(root_key)
+            ek = ek.derive_path(ci.getWalletAccountPath())
+            ek.neuter()
+            seed_id = hash160(ek.encode_p())
 
         key_str = "main_wallet_seedid_" + db_key_coin_name
         self.setStringKV(key_str, seed_id.hex(), cursor)
