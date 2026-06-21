@@ -603,7 +603,8 @@ def runClient(
 
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-        signal.signal(signal.SIGHUP, signal_handler)
+        if hasattr(signal, "SIGHUP"):
+            signal.signal(signal.SIGHUP, signal_handler)
 
         if len(start_only_coins) > 0:
             logger.info(

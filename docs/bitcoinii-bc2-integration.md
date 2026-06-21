@@ -58,6 +58,13 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
   - mined three consecutive regtest blocks with `generatetoaddress`.
   - passed the descriptor/watch-only/mining probe with `repeat_mining_ok: true`.
   - mined 100 additional blocks and verified the watch wallet saw `150.00000000` trusted mature BC2.
+- Managed regtest setup with Particl plus BC2:
+  - downloaded and extracted Particl Core v27.2.3.0.
+  - prepared a wallet-initialized `--regtest` BasicSwap datadir with `particl` and `bitcoinii`.
+  - created BC2 `bsx_wallet` and descriptor watch wallet `bsx_watch`.
+  - started full `basicswap-run` and confirmed the UI returned HTTP 200.
+  - confirmed BasicSwap detected `BitcoinII Core version 290100`.
+  - confirmed the BC2 wallet seed check passed without the "not derived from swap seed" warning.
 
 ## Roadmap
 
@@ -79,10 +86,10 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
 - Prepared an initial BitcoinII Core regtest mining patch at `patches/bitcoinii-core-regtest-mining-fix.patch`.
 - Built the patched BitcoinII Core daemon/CLI locally and verified repeat regtest mining works.
 - Verified funded watch-only balance tracking against the patched regtest daemon.
+- Verified managed Particl plus BC2 regtest startup through BasicSwap's runner.
 
 ### Next Verification
 
-- Run a full managed BasicSwap startup with Particl plus BC2. This requires Particl binaries in the test environment.
 - Run a live regtest swap path using BC2 as the BTC-like side.
 
 ### Packaging And Upstream Readiness
@@ -91,3 +98,8 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
 - Check whether upstream BasicSwap wants BC2 release downloads from `Bitcoin-II/BitcoinII-Core` or a separate binary-release repository.
 - Add/update extended regtest tests if upstream maintainers want BC2 covered like Namecoin/Dogecoin.
 - Decide whether upstream BasicSwap wants BitcoinII as a built-in coin or maintained as a downstream fork.
+
+### Local Test Notes
+
+- The local Particl binary download hash matched the downloaded Particl assert file. Signature verification was skipped for that one local download because Git for Windows `gpg.exe` was available but failed under the Python/GPG path handling in this environment.
+- The local managed tests use patched BC2 binaries built from `patches/bitcoinii-core-regtest-mining-fix.patch`; the stock BC2 v29.1.0 release binary still cannot repeatedly mine regtest blocks.

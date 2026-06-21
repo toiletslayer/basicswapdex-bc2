@@ -2571,6 +2571,8 @@ def main():
                 continue
             if name == "particl_mnemonic":
                 particl_wallet_mnemonic = s[1].strip('"')
+                if particl_wallet_mnemonic == "auto":
+                    particl_wallet_mnemonic = None
                 continue
             if name in ("withcoin", "withcoins"):
                 for coin in [s.strip().lower() for s in s[1].split(",")]:
