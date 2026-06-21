@@ -8,6 +8,8 @@ The implementation is already pushed to `main` and includes chain parameters, a 
 
 ### 1. Run the full BC2 extended regtest suite
 
+Tracking issue: `https://github.com/toiletslayer/basicswapdex-bc2/issues/1`
+
 Run:
 
 ```bash
@@ -36,6 +38,8 @@ Acceptance criteria:
 
 ### 2. Upstream the BitcoinII Core regtest mining fix
 
+Tracking issue: `https://github.com/toiletslayer/basicswapdex-bc2/issues/2`
+
 Stock BitcoinII Core v29.1.0 can mine the first regtest block, but later `generatetoaddress` calls return an empty block list. This blocks automated BasicSwap regtest swap validation.
 
 This repo includes:
@@ -51,6 +55,8 @@ Acceptance criteria:
 - Update this BasicSwap branch once an upstream BC2 Core release or commit contains the fix.
 
 ### 3. Decide the BasicSwap upstream packaging path
+
+Tracking issue: `https://github.com/toiletslayer/basicswapdex-bc2/issues/3`
 
 Options:
 
@@ -69,13 +75,3 @@ Acceptance criteria:
 - Pick an upstream strategy.
 - Prepare the PR body/checklist using `docs/bitcoinii-bc2-integration.md` as the source of truth.
 - If submitting upstream, link the BC2 Core regtest mining issue or PR.
-
-## GitHub Permission Note
-
-After the repo was made public, the GitHub connector could read it but still could not create issues. GitHub returned:
-
-```text
-Resource not accessible by integration
-```
-
-That usually means the GitHub App installation lacks the issue-write permission for this repository. Until that is changed, tracking items are recorded in this document instead of GitHub Issues.
