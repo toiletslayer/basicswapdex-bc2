@@ -1143,6 +1143,10 @@ class BasicSwap(BaseApp, BSXNetwork, UIApp):
                 self._initElectrumBackend(coin, interface)
 
             return interface
+        elif coin == Coins.BC2:
+            from .interface.bitcoinii import BitcoinIIInterface
+
+            return BitcoinIIInterface(self.coin_clients[coin], self.chain, self)
         elif coin == Coins.BCH:
             from .interface.bch import BCHInterface
 
@@ -3210,7 +3214,7 @@ class BasicSwap(BaseApp, BSXNetwork, UIApp):
             legacy_root_hash = ci.getSeedHash(root_key, 20)
             self.setStringKV(key_str, legacy_root_hash.hex(), cursor)
 
-        if coin_type in (Coins.LTC, Coins.BTC):
+        if coin_type in (Coins.LTC, Coins.BTC, Coins.BC2):
             from basicswap.contrib.test_framework.script import hash160
             from basicswap.util.extkey import ExtKeyPair
 
@@ -4757,7 +4761,7 @@ class BasicSwap(BaseApp, BSXNetwork, UIApp):
                 self.log.warning("Node is locked.")
                 return False
 
-        if c == Coins.BTC and not ci.useBackend():
+        if c in (Coins.BTC, Coins.BC2) and not ci.useBackend():
             if len(ci.rpc("listwallets")) < 1:
                 self.log.warning(f"Missing wallet for coin {ci.coin_name()}")
                 return False
@@ -4768,7 +4772,7 @@ class BasicSwap(BaseApp, BSXNetwork, UIApp):
         if ci.checkExpectedSeed(expect_seedid):
             ci.setWalletSeedWarning(False)
             return True
-        if c in (Coins.DCR, Coins.LTC, Coins.BTC):
+        if c in (Coins.DCR, Coins.LTC, Coins.BTC, Coins.BC2):
             alt_seedid = self.getStringKV(
                 "main_wallet_seedid_alt_" + ci.coin_name().lower()
             )
@@ -4777,7 +4781,7 @@ class BasicSwap(BaseApp, BSXNetwork, UIApp):
                 return True
 
             _, is_locked = self.getLockedState()
-            if not is_locked and c in (Coins.LTC, Coins.BTC):
+            if not is_locked and c in (Coins.LTC, Coins.BTC, Coins.BC2):
                 try:
                     from basicswap.contrib.test_framework.script import hash160
                     from basicswap.util.extkey import ExtKeyPair
