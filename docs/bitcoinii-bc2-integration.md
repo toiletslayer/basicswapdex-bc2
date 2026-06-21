@@ -73,6 +73,10 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
   - ran `TestBC2.test_02_sh_part_coin`.
   - completed the seller-first PART to BC2 swap path successfully.
   - observed both swap clients reach `SWAP_COMPLETED`.
+- Reverse BC2/PART daemon-backed smoke swap:
+  - ran `TestBC2.test_03_sh_coin_part`.
+  - completed the seller-first BC2 to PART swap path successfully.
+  - observed both swap clients reach `SWAP_COMPLETED`.
 
 ## Roadmap
 
@@ -101,11 +105,11 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
   - repeat regtest mining with patched BitcoinII Core.
   - inherited BTC-like script checks for Segwit, CLTV, CSV, watch-only behavior, and related wallet RPCs.
   - seller-first PART/BC2 swap success and refund/error-path coverage through the existing shared BTC-like test helpers.
-- Verified the first live seller-first PART to BC2 smoke swap with Monero disabled.
+- Verified live seller-first PART to BC2 and BC2 to PART smoke swaps with Monero disabled.
 
 ### Next Verification
 
-- Run more BC2/PART paths from `tests/basicswap/extended/test_bitcoinii.py`, especially the reverse BC2 to PART direction and refund/error paths.
+- Run more BC2/PART paths from `tests/basicswap/extended/test_bitcoinii.py`, especially refund/error paths.
 - Run `tests/basicswap/extended/test_bitcoinii.py` end-to-end with patched BitcoinII Core binaries and the standard BasicSwap extended-test daemon set available. On this Windows PC the full inherited suite is currently blocked by Windows security blocking `monero-wallet-rpc.exe`.
 - If the full inherited extended suite is too slow for upstream CI, split out a smaller BC2 smoke test that runs only PART/BC2 seller-first success plus the watch-only/script requirement checks.
 

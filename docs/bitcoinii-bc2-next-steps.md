@@ -26,6 +26,9 @@ Current status:
   - local Particl, Bitcoin Core, and patched BitcoinII Core regtest daemons started.
   - a seller-first PART to BC2 offer/bid completed.
   - both swap clients reached `SWAP_COMPLETED`.
+- `TestBC2.test_03_sh_coin_part` passed with Monero startup disabled:
+  - a seller-first BC2 to PART offer/bid completed.
+  - both swap clients reached `SWAP_COMPLETED`.
 
 Requirements:
 
@@ -38,6 +41,7 @@ Acceptance criteria:
 
 - BC2 extended test setup starts all required daemons. Partial: PART, Bitcoin Core, and BC2 start locally; Monero wallet RPC is blocked by Windows security on this PC.
 - PART/BC2 seller-first success path completes. Done for `TestBC2.test_02_sh_part_coin`.
+- BC2/PART seller-first success path completes. Done for `TestBC2.test_03_sh_coin_part`.
 - Refund/error-path checks complete, or any BC2-specific failures are documented with logs.
 - Results are copied into `docs/bitcoinii-bc2-integration.md`.
 
