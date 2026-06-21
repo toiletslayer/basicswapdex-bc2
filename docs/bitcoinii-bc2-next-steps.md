@@ -46,6 +46,7 @@ This repo includes:
 
 - `patches/bitcoinii-core-regtest-mining-fix.patch`
 - `docs/bitcoinii-core-regtest-mining.md`
+- `docs/bitcoinii-core-upstream-issue-draft.md`
 - `scripts/probe_bitcoinii_regtest.py`
 
 Acceptance criteria:
