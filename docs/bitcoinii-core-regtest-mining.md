@@ -73,12 +73,48 @@ That patch changes only regtest chain parameters:
 - regtest genesis hash assertion to the resulting hash.
 - regtest height-0 checkpoint to the resulting hash.
 
-The patch has not yet been compiled in this environment because CMake/Ninja/MSVC build tools are not installed on the current PC. After building a patched `bitcoinIId`, rerun:
+## Patched Build Validation
+
+The patch was built locally on Windows with Visual Studio 2022, CMake, and vcpkg using a daemon/CLI-only configuration:
+
+```powershell
+$env:VCPKG_ROOT='C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg'
+cmake -S C:\bc2src -B C:\bcli -G 'Visual Studio 17 2022' -A x64 `
+  -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" `
+  -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+  -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON `
+  -DVCPKG_MANIFEST_FEATURES=wallet `
+  -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF `
+  -DBUILD_FUZZ_BINARY=OFF -DBUILD_TX=OFF -DBUILD_UTIL=OFF `
+  -DBUILD_WALLET_TOOL=OFF -DBUILD_CLI=ON -DBUILD_DAEMON=ON `
+  -DENABLE_WALLET=ON -DWITH_BDB=ON -DWITH_SQLITE=ON -DWITH_ZMQ=OFF
+cmake --build C:\bcli --config Release --target bitcoinIId bitcoinII-cli --parallel
+```
+
+The patched binaries passed the probe:
 
 ```bash
 python scripts/probe_bitcoinii_regtest.py --daemon /path/to/patched/bitcoinIId --cli /path/to/patched/bitcoinII-cli
 ```
 
-The expected patched result is `repeat_mining_ok: true`.
+Observed result:
 
-Until that is fixed or a dedicated testing binary is provided, BasicSwap can start and configure BC2, but full automated regtest swap tests cannot be completed reliably.
+- `getdescriptorinfo` and `importdescriptors` are available.
+- `getdeploymentinfo` lists `csv`, `segwit`, and `taproot`.
+- descriptor import into a private-key-disabled watch wallet succeeds.
+- three consecutive `generatetoaddress` calls mined blocks at heights 1, 2, and 3.
+- `repeat_mining_ok: true`.
+
+The optional funded watch-wallet check also passed:
+
+```bash
+python scripts/probe_bitcoinii_regtest.py --daemon /path/to/patched/bitcoinIId --cli /path/to/patched/bitcoinII-cli --mature-watch-funds
+```
+
+That run mined 100 additional blocks after the first three probe blocks. The watch wallet reported the watched coinbase outputs as mature and trusted:
+
+- `watch_received_by_address_minconf_1: 150.00000000`
+- `watch_balances.mine.trusted: 150.00000000`
+- final chain height: `103`
+
+This clears the Core-side blocker for automated BasicSwap regtest swap validation, assuming the patched BitcoinII Core binary or equivalent upstream fix is used.

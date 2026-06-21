@@ -53,6 +53,11 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
   - descriptor RPCs `getdescriptorinfo` and `importdescriptors` are available.
   - `getdeploymentinfo` lists `csv`, `segwit`, and `taproot`.
   - the daemon reports `/Satoshi:29.1.0/`.
+- Patched BitcoinII Core regtest build from `patches/bitcoinii-core-regtest-mining-fix.patch`:
+  - built `bitcoinIId.exe` and `bitcoinII-cli.exe` with wallet support and without GUI/tests/ZMQ.
+  - mined three consecutive regtest blocks with `generatetoaddress`.
+  - passed the descriptor/watch-only/mining probe with `repeat_mining_ok: true`.
+  - mined 100 additional blocks and verified the watch wallet saw `150.00000000` trusted mature BC2.
 
 ## Roadmap
 
@@ -72,11 +77,11 @@ BitcoinII / BC2 is a Bitcoin Core-derived chain, so this branch follows the exis
   - CSV and Segwit are present in `getdeploymentinfo`.
   - descriptor watch-only wallet RPCs are available and import succeeds.
 - Prepared an initial BitcoinII Core regtest mining patch at `patches/bitcoinii-core-regtest-mining-fix.patch`.
+- Built the patched BitcoinII Core daemon/CLI locally and verified repeat regtest mining works.
+- Verified funded watch-only balance tracking against the patched regtest daemon.
 
 ### Next Verification
 
-- Build and test the BitcoinII Core regtest mining patch. The v29.1.0 release binary mined the first regtest block with `generatetoaddress`, then returned an empty block list on later calls even with `maxtries=100000000`. The legacy `setgenerate` RPC is not available. Source review shows regtest is intended to be easy (`powLimit=7fff...`, `fPowAllowMinDifficultyBlocks=true`, `fPowNoRetargeting=true`), but the regtest genesis is created with `nBits=0x1d00ffff`. With no retargeting, that hard target appears to carry forward and prevents practical local mining. Use `scripts/probe_bitcoinii_regtest.py` to test patched binaries.
-- After mining is predictable, test funded watch-only balance tracking against `bitcoinIId` regtest. Descriptor import is verified, but a funded balance test needs spendable regtest coins.
 - Run a full managed BasicSwap startup with Particl plus BC2. This requires Particl binaries in the test environment.
 - Run a live regtest swap path using BC2 as the BTC-like side.
 

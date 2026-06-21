@@ -36,6 +36,16 @@ def cli_call(cli_path, base_args, *args, wallet=None, json_out=True):
     return json.loads(out, parse_float=Decimal) if json_out else out.strip()
 
 
+def json_ready(value):
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: json_ready(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [json_ready(v) for v in value]
+    return value
+
+
 def wait_for_rpc(cli_path, base_args, timeout_seconds):
     deadline = time.time() + timeout_seconds
     while time.time() < deadline:
@@ -80,6 +90,11 @@ def main():
         "--keep-datadir",
         action="store_true",
         help="Do not delete temporary datadir on exit.",
+    )
+    parser.add_argument(
+        "--mature-watch-funds",
+        action="store_true",
+        help="Mine additional blocks after the repeat-mining probe so watched coinbase funds mature.",
     )
     args = parser.parse_args()
 
@@ -174,6 +189,61 @@ def main():
         first_mine = mine_one(cli_path, base_args, address, args.maxtries)
         second_mine = mine_one(cli_path, base_args, address, args.maxtries)
         third_mine = mine_one(cli_path, base_args, address, args.maxtries)
+        watch_received = cli_call(
+            cli_path,
+            base_args,
+            "getreceivedbyaddress",
+            address,
+            1,
+            wallet="watch",
+        )
+        watch_balances = cli_call(cli_path, base_args, "getbalances", wallet="watch")
+        repeat_mining_ok = (
+            first_mine["return_count"] > 0
+            and second_mine["return_count"] > 0
+            and third_mine["return_count"] > 0
+        )
+        mature_watch_result = None
+        if args.mature_watch_funds:
+            if repeat_mining_ok:
+                maturity_address = cli_call(
+                    cli_path,
+                    base_args,
+                    "getnewaddress",
+                    "",
+                    "bech32",
+                    wallet="spend",
+                    json_out=False,
+                )
+                maturity_hashes = cli_call(
+                    cli_path,
+                    base_args,
+                    "generatetoaddress",
+                    100,
+                    maturity_address,
+                    args.maxtries,
+                )
+                mature_watch_result = {
+                    "maturity_blocks_mined": len(maturity_hashes),
+                    "watch_received_by_address_minconf_1": cli_call(
+                        cli_path,
+                        base_args,
+                        "getreceivedbyaddress",
+                        address,
+                        1,
+                        wallet="watch",
+                    ),
+                    "watch_balances": cli_call(
+                        cli_path, base_args, "getbalances", wallet="watch"
+                    ),
+                    "chain_height": cli_call(
+                        cli_path, base_args, "getblockchaininfo"
+                    ).get("blocks"),
+                }
+            else:
+                mature_watch_result = {
+                    "skipped": "repeat mining failed before maturity check"
+                }
 
         deployments = deployment_info.get("deployments", {})
         result = {
@@ -195,19 +265,19 @@ def main():
             ),
             "watch_descriptor_import_success": bool(import_result[0].get("success")),
             "watch_address_solvable": watch_address_info.get("solvable"),
+            "watch_received_by_address_minconf_1": watch_received,
+            "watch_balances_after_mining": watch_balances,
             "mining": {
                 "maxtries": args.maxtries,
                 "first": first_mine,
                 "second": second_mine,
                 "third": third_mine,
-                "repeat_mining_ok": (
-                    first_mine["return_count"] > 0
-                    and second_mine["return_count"] > 0
-                    and third_mine["return_count"] > 0
-                ),
+                "repeat_mining_ok": repeat_mining_ok,
             },
         }
-        print(json.dumps(result, indent=2))
+        if mature_watch_result is not None:
+            result["mature_watch_funds"] = mature_watch_result
+        print(json.dumps(json_ready(result), indent=2))
         return 0 if result["mining"]["repeat_mining_ok"] else 2
     finally:
         try:
