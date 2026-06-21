@@ -177,6 +177,7 @@ class TestBC2(BasicSwapTest):
             "use_segwit": True,
             "blocks_confirmed": 1,
             "use_descriptors": BC2_USE_DESCRIPTORS,
+            "wallet_name": "bsx_wallet",
         }
         if BC2_USE_DESCRIPTORS:
             settings["chainclients"]["bitcoinii"]["watch_wallet_name"] = "bsx_watch"

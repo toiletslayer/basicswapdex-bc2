@@ -22,17 +22,22 @@ Current status:
 - Managed Particl plus BC2 regtest startup has been validated.
 - BC2 descriptor spend/watch wallets have been validated.
 - Repeat BC2 regtest mining has been validated with patched BitcoinII Core.
+- `TestBC2.test_02_sh_part_coin` passed with Monero startup disabled:
+  - local Particl, Bitcoin Core, and patched BitcoinII Core regtest daemons started.
+  - a seller-first PART to BC2 offer/bid completed.
+  - both swap clients reached `SWAP_COMPLETED`.
 
 Requirements:
 
 - Patched BitcoinII Core binaries from `patches/bitcoinii-core-regtest-mining-fix.patch`.
 - Standard BasicSwap extended-test daemon dependencies.
 - Enough runtime to execute daemon-backed swap tests.
+- On this Windows PC, `monero-wallet-rpc.exe` was blocked by Windows security, so XMR-dependent inherited tests cannot run here unless that executable is allowed or the BC2 tests are split into a smaller PART/BC2-only smoke suite.
 
 Acceptance criteria:
 
-- BC2 extended test setup starts all required daemons.
-- PART/BC2 seller-first success path completes.
+- BC2 extended test setup starts all required daemons. Partial: PART, Bitcoin Core, and BC2 start locally; Monero wallet RPC is blocked by Windows security on this PC.
+- PART/BC2 seller-first success path completes. Done for `TestBC2.test_02_sh_part_coin`.
 - Refund/error-path checks complete, or any BC2-specific failures are documented with logs.
 - Results are copied into `docs/bitcoinii-bc2-integration.md`.
 
